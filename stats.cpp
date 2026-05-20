@@ -20,6 +20,7 @@ Version   Log/Ref   Date        Author        Description
 #include <vector>
 #include <sstream>
 #include <cstdlib>   // EXIT_SUCCESS / EXIT_FAILURE
+#include <cmath>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -106,6 +107,37 @@ void display_data(const std::vector<double>& data) {
     std::cout << "Data[" << (i+1) << "]=" << data[i] << '\n';
 }
 
+// Calculate standard deviation (Sample) for the data set
+double stddev(const std::vector<double>& data) {
+  const std::size_t n = data.size();
+  if (n < 2) throw std::domain_error("stddev requires at least two values");
+
+  double sum = 0.0;
+  for (double x : data) sum += x;
+  double mean = sum / static_cast<double>(n);
+
+  double sumsq = 0.0;
+  for (double x : data) {
+    double d = x - mean;
+    sumsq += d * d;
+  }
+
+  double variance = sumsq / static_cast<double>(n - 1); // sample variance
+  return std::sqrt(variance);
+}
+
+// Calculate the mean value of the data
+double mean(const std::vector<double>& data) {
+  const std::size_t n = data.size();
+  if (n < 2) throw std::domain_error("stddev requires at least two values");
+
+  double sum = 0.0;
+  for (double x : data) sum += x;
+  double mean = sum / static_cast<double>(n);
+
+  return mean;
+}
+
 void display_menu() {
   clear_screen();
   std::cout << std::endl;
@@ -124,8 +156,12 @@ void display_menu() {
 }
 
 void action_one(std::vector<double>& stats_data) {
-  int count_values=0;
-  const int min=2, max=20;
+  const std::size_t n = stats_data.size();   // number of entries in stats_data
+  const int min=2, max=30;                   // determines how many data values may be entered
+  int count_values=0;                        // number of values user chose to enter
+  char response;
+  bool ok_to_enter_data=true;                // Confirm with user before wiping data to enter new data
+
 
   
   clear_screen();
@@ -135,8 +171,26 @@ void action_one(std::vector<double>& stats_data) {
   std::cout << "-                             -"  << std::endl;
   std::cout << "-        ENTER DATA           -"  << std::endl;
   std::cout << "-------------------------------"  << std::endl;
-  count_values=prompt_range(std::string("How many values do you want to enter?"),min,max);
-  stats_data=get_data(count_values); //Prompt  user to enter data values
+  
+  
+  // Check if there is existing data. 
+  if (n>0) {
+    // Warn user existing data will be cleared, and ask if they want to continue
+    ok_to_enter_data=false; // Need to confirm with user before clearing existing data
+    std::cout << "\aWARNING! Existing data will be cleared if you continue." << std::endl;
+    std::cout << "Enter Y to continue and lose existing data, or N to keep data and return to the menu :";
+    std::cin.get(response);
+    if (response == '\n')            // if previous input left a newline, read a real char
+      std::cin.get(response);
+    if (response=='Y' || response == 'y') ok_to_enter_data=true;
+  }
+  if (ok_to_enter_data) {
+    // No existing data, or user confirmed they want to enter new data
+    count_values=prompt_range(std::string("How many values do you want to enter?"),min,max);
+    stats_data=get_data(count_values); //Prompt  user to enter data values
+  } else {
+    std::cout << "\nYour existing data has been kept in memory." << std::endl;
+  }
 }
 
 void action_two(std::vector<double>& stats_data) {
@@ -171,6 +225,8 @@ void action_four(std::vector<double>& stats_data) {
 }
 
 void action_five(std::vector<double>& stats_data) {
+  double standard_deviation, mean_value;
+  
   clear_screen();
   std::cout << std::endl;
   std::cout << "-------------------------------"  << std::endl;
@@ -178,6 +234,12 @@ void action_five(std::vector<double>& stats_data) {
   std::cout << "-                             -"  << std::endl;
   std::cout << "-         CALCULATE           -"  << std::endl;
   std::cout << "-------------------------------"  << std::endl;
+  
+  standard_deviation=stddev(stats_data);
+  std::cout << "\n\nStandard Deviation (Sample) = " << standard_deviation << std::endl;
+  
+  mean_value=mean(stats_data);
+  std::cout << "\n\nMean = " << mean_value << std::endl <<std::endl;
 }
 
 bool action_quit(std::vector<double>& stats_data) {
