@@ -15,6 +15,7 @@ Version   Log/Ref   Date        Author        Description
 */
 
 #include <iostream>
+#include <fstream>
 #include <limits>
 #include <string>
 #include <vector>
@@ -24,6 +25,12 @@ Version   Log/Ref   Date        Author        Description
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+// Open file
+std::ifstream file_open(std::string &filename) {
+  std::ifstream file(filename);
+  return file;
+}
 
 // Clear terminal screen
 void clear_screen() {
@@ -42,6 +49,19 @@ void clear_screen() {
     // POSIX: send ANSI clear + move-home (works in bash, xterm, most terminals)
     std::cout << "\x1b[2J\x1b[H" << std::flush;
   #endif
+}
+
+
+// Prompt for filename
+std::string prompt_filename(const std::string& prompt = "Enter filename: ") {
+    std::string filename;
+    std::cout << prompt << std::flush;            // ensure prompt is shown
+    if (!std::getline(std::cin, filename)) return std::string(); // return empty on EOF/error
+    // optional trim of leading/trailing whitespace
+    const auto start = filename.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos) return std::string();
+    const auto end = filename.find_last_not_of(" \t\r\n");
+    return filename.substr(start, end - start + 1);
 }
 
 // Prompt user to enter an option within specified range of numbers, return number
@@ -151,6 +171,7 @@ void display_menu() {
   std::cout << " 3. SAVE Data"                    << std::endl;
   std::cout << " 4. Load Data"                    << std::endl;
   std::cout << " 5. Calculate Statistics"         << std::endl;
+  std::cout << " 6. Print Results"                << std::endl;  
   std::cout << "99. Exit"                         << std::endl;
   std::cout << "-------------------------------"  << std::endl << std::endl;
 }
@@ -215,6 +236,10 @@ void action_three(std::vector<double>& stats_data) {
 }
 
 void action_four(std::vector<double>& stats_data) {
+  std::ifstream file;                 // file pointer
+  std::string filename;               // Name of file to open passed as command line arg
+  std::string line;                   // Record read from CSV file
+  
   clear_screen();
   std::cout << std::endl;
   std::cout << "-------------------------------"  << std::endl;
@@ -222,9 +247,67 @@ void action_four(std::vector<double>& stats_data) {
   std::cout << "-                             -"  << std::endl;
   std::cout << "-          LOAD DATA          -"  << std::endl;
   std::cout << "-------------------------------"  << std::endl;
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  filename=prompt_filename();
+  if (filename.empty()) {
+    std::cout << "No filename entered." << std::endl;
+    return;
+  } 
+  std::cout << "You entered: " << filename << std::endl;
+  
+  // Open file
+  file=file_open(filename);
+  if (!file) {
+    std::cerr << "Error: could not open file '" << filename << "'\n";
+    return;
+  }
+  
+  // Load CSV data
+  while (std::getline(file, line)) {
+    if (line.empty()) continue;
+
+    std::istringstream row(line);
+    std::vector<std::string> fields;
+    std::string field;
+
+    // split by comma
+    while (std::getline(row, field, ',')) {
+      // trim simple whitespace (optional)
+      size_t start = field.find_first_not_of(" \t\r\n");
+      size_t end   = field.find_last_not_of(" \t\r\n");
+      if (start == std::string::npos) field = "";
+      else field = field.substr(start, end - start + 1);
+
+      fields.push_back(field);
+    }
+
+    // example: take second column (index 1) as numeric value
+    if (fields.size() > 1) {
+      try {
+          double val = std::stod(fields[1]); // convert string to double
+          stats_data.push_back(val);
+      } catch (const std::invalid_argument&) {
+          std::cerr << "Warning: non-numeric value '" << fields[1] << "' in line: " << line << '\n';
+      } catch (const std::out_of_range&) {
+          std::cerr << "Warning: numeric value out of range in line: " << line << '\n';
+      }
+    } else {
+        std::cerr << "Warning: not enough fields in line: " << line << '\n';
+    }
+  }
+
+  if (file.bad()) {
+      std::cerr << "I/O error while reading.\n";
+      return;
+  }
+
+  file.close();   // Close file
+  
+  std::cout << "Data loaded OK." << std::endl;
 }
 
 void action_five(std::vector<double>& stats_data) {
+  const std::size_t n = stats_data.size();   // number of entries in stats_data
   double standard_deviation, mean_value;
   
   clear_screen();
@@ -235,11 +318,40 @@ void action_five(std::vector<double>& stats_data) {
   std::cout << "-         CALCULATE           -"  << std::endl;
   std::cout << "-------------------------------"  << std::endl;
   
-  standard_deviation=stddev(stats_data);
-  std::cout << "\n\nStandard Deviation (Sample) = " << standard_deviation << std::endl;
+  // Check if there are any values for the calculation
+  if (n) {
+    standard_deviation=stddev(stats_data);
+    std::cout << "\n\nStandard Deviation (Sample) = " << standard_deviation << std::endl;
   
-  mean_value=mean(stats_data);
-  std::cout << "\n\nMean = " << mean_value << std::endl <<std::endl;
+    mean_value=mean(stats_data);
+    std::cout << "\n\nMean = " << mean_value << std::endl <<std::endl;
+  } else {
+    std::cout << "Please enter or load some data for the calculations!" << std::endl;
+  }
+}
+
+void action_six(std::vector<double>& stats_data) {
+  const std::size_t n = stats_data.size();   // number of entries in stats_data
+  double standard_deviation, mean_value;
+  
+  clear_screen();
+  std::cout << std::endl;
+  std::cout << "-------------------------------"  << std::endl;
+  std::cout << "-     S T A T I S T I C S     -"  << std::endl;
+  std::cout << "-                             -"  << std::endl;
+  std::cout << "-        PRINT RESULTS        -"  << std::endl;
+  std::cout << "-------------------------------"  << std::endl;
+  
+  // Check if there are any values for the calculation
+  if (n) {
+    standard_deviation=stddev(stats_data);
+    std::cout << "\n\nStandard Deviation (Sample) = " << standard_deviation << std::endl;
+  
+    mean_value=mean(stats_data);
+    std::cout << "\n\nMean = " << mean_value << std::endl <<std::endl;
+  } else {
+    std::cout << "Please enter or load some data for the calculations!" << std::endl;
+  }
 }
 
 bool action_quit(std::vector<double>& stats_data) {
@@ -276,6 +388,9 @@ bool process_option(int p_option, std::vector<double>& stats_data) {
       break;
     case 5:
       action_five(stats_data);
+      break;
+    case 6:
+      action_six(stats_data);
       break;
     case 99:                    // Quit, exit program
       quit=action_quit(stats_data);
