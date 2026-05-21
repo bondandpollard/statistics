@@ -5,6 +5,14 @@ Function  : Statistics application.
             Enter data and save as CSV file. Compatible with Oracle appsdemo stats app.
             Load data from CSV.
             Generate statistics from data.
+            
+            TO DO:
+            SAVE Data 
+            PRINT Results (save calculate stats as test)
+            
+            Also: Make this compatible with appsdemo by handling the CSV header row when loading and saving data!
+            
+            
 Author    : Ian Bond
 Date      : 20 May 2026
 
@@ -53,7 +61,7 @@ void clear_screen() {
 
 
 // Prompt for filename
-std::string prompt_filename(const std::string& prompt = "Enter filename: ") {
+std::string prompt_filename(const std::string& prompt = "\nEnter filename: ") {
     std::string filename;
     std::cout << prompt << std::flush;            // ensure prompt is shown
     if (!std::getline(std::cin, filename)) return std::string(); // return empty on EOF/error
@@ -87,14 +95,14 @@ void prompt_continue() {
 }
 
 
-// Confirm user is sure they want to quit
+// Confirm user is sure they want to quit and lose unsaved data
 bool prompt_confirm_quit() {
   bool quit=false;
   char response;
   
   std::cout << "\a"; // beep
   std::cout << "\nARE YOU SURE YOU WANT TO QUIT? ANY UNSAVED DATA WILL BE LOST!" << std::endl << std::endl;
-  std::cout << "Enter Q to quit and lose unsaved data, or any other key to return to the menu: ";
+  std::cout << "\nEnter Q to quit and lose unsaved data, or any other key to return to the menu: ";
   std::cin.get(response);
   if (response == '\n')            // if previous input left a newline, read a real char
     std::cin.get(response);
@@ -102,6 +110,25 @@ bool prompt_confirm_quit() {
   return quit;
 }
 
+
+// Warn user existing data will be cleared, and ask if they want to continue
+bool warn_clear_data(std::vector<double>& stats_data) {
+  const std::size_t n = stats_data.size();   // number of entries in stats_data
+  char response;
+  bool clear_data=false;
+  
+  if (n>0) {
+    std::cout << "\a\nWARNING! Existing data will be cleared if you continue." << std::endl;
+    std::cout << "\nEnter Y to continue and lose existing data, or N to keep data and return to the menu :";
+    std::cin.get(response);
+    if (response == '\n')            // if previous input left a newline, read a real char
+      std::cin.get(response);
+    if (response=='Y' || response == 'y') clear_data=true;
+  } else {
+    clear_data=true;    // no data to lose
+  }
+  return clear_data;
+}
 
 // Prompt user to enter stats data
 std::vector<double> get_data(int p_count) { 
@@ -177,14 +204,11 @@ void display_menu() {
 }
 
 void action_one(std::vector<double>& stats_data) {
-  const std::size_t n = stats_data.size();   // number of entries in stats_data
   const int min=2, max=30;                   // determines how many data values may be entered
   int count_values=0;                        // number of values user chose to enter
   char response;
   bool ok_to_enter_data=true;                // Confirm with user before wiping data to enter new data
 
-
-  
   clear_screen();
   std::cout << std::endl;
   std::cout << "-------------------------------"  << std::endl;
@@ -193,18 +217,8 @@ void action_one(std::vector<double>& stats_data) {
   std::cout << "-        ENTER DATA           -"  << std::endl;
   std::cout << "-------------------------------"  << std::endl;
   
-  
   // Check if there is existing data. 
-  if (n>0) {
-    // Warn user existing data will be cleared, and ask if they want to continue
-    ok_to_enter_data=false; // Need to confirm with user before clearing existing data
-    std::cout << "\aWARNING! Existing data will be cleared if you continue." << std::endl;
-    std::cout << "Enter Y to continue and lose existing data, or N to keep data and return to the menu :";
-    std::cin.get(response);
-    if (response == '\n')            // if previous input left a newline, read a real char
-      std::cin.get(response);
-    if (response=='Y' || response == 'y') ok_to_enter_data=true;
-  }
+  ok_to_enter_data=warn_clear_data(stats_data);
   if (ok_to_enter_data) {
     // No existing data, or user confirmed they want to enter new data
     count_values=prompt_range(std::string("How many values do you want to enter?"),min,max);
@@ -236,9 +250,12 @@ void action_three(std::vector<double>& stats_data) {
 }
 
 void action_four(std::vector<double>& stats_data) {
-  std::ifstream file;                 // file pointer
-  std::string filename;               // Name of file to open passed as command line arg
-  std::string line;                   // Record read from CSV file
+  const std::size_t n = stats_data.size();   // number of entries in stats_data
+  std::ifstream file;                        // file pointer
+  std::string filename;                      // Name of file to open passed as command line arg
+  std::string line;                          // Record read from CSV file
+  bool ok_to_continue;                       // If there is existing data, confirm user want to load new data and replace it
+
   
   clear_screen();
   std::cout << std::endl;
@@ -247,13 +264,34 @@ void action_four(std::vector<double>& stats_data) {
   std::cout << "-                             -"  << std::endl;
   std::cout << "-          LOAD DATA          -"  << std::endl;
   std::cout << "-------------------------------"  << std::endl;
+  
+  
+     
+  if (n>0) {
+    std::cout << "\nYou have existing data. There are " << n << " values in memory." << std::endl;
+  }
+  // Check if existing data, warn user
+  ok_to_continue=warn_clear_data(stats_data);
+  if (!ok_to_continue) {
+    // User aborted load new data to keep existing
+    std::cout << "Y\nour existing data will be kept in memory." << std::endl;
+    return;
+  }
+  
+  // Either no data, or user confirmed OK continue
+  
+  if (n>0) {
+    // CLEAR DATA AND CONTINUE
+    std::cout << "\nExisting data will be cleared." << std::endl;
+    stats_data.clear();
+  }
+  
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   filename=prompt_filename();
   if (filename.empty()) {
-    std::cout << "No filename entered." << std::endl;
+    std::cout << "\nNo filename entered." << std::endl;
     return;
   } 
-  std::cout << "You entered: " << filename << std::endl;
   
   // Open file
   file=file_open(filename);
