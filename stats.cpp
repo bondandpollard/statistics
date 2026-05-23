@@ -18,7 +18,7 @@ Function  : Statistics application.
             Provide a command line option: if csv file specified auto load data (call load function), and display results.
             (this is why you need to move load to a separate function called from more than one place).
             Build a Windows GUI version.
-	    Build an Android Mobile version.
+            Build an Android Mobile version.
                  
 Author    : Ian Bond
 Date      : 20 May 2026
