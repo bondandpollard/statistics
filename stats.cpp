@@ -8,16 +8,17 @@ Function  : Statistics application.
             
             TO DO:
             Make this compatible with appsdemo by handling the CSV header row when loading and saving data!
-            Pass the Project Desccription with the Stats Data to all functions. Combine in single data structure?
+            Pass the Project Description with the Stats Data to all functions. Combine in single data structure?
             Display project desc on all screens.
-            Enter data: Prompt for Project Desc, supply a default value
-            Load data: handle header, store project desc in passed variable. If no header set default value.
-            Save data: Header row is project desc
-            Print Results (save calculated stats as text file)
+            Enter data: Prompt for Project Desc, supply a default value.
+            Load data: handle header - store project desc in passed variable. If no header set default value.
+            Save data: Header row is project desc.
+            Print Results (save calculated stats as text file).
             Move load data into a separate function that just loads the data into the vector (and header var).
             Provide a command line option: if csv file specified auto load data (call load function), and display results.
             (this is why you need to move load to a separate function called from more than one place).
-            
+            Build a Windows GUI version.
+	    Build an Android Mobile version.
                  
 Author    : Ian Bond
 Date      : 20 May 2026
