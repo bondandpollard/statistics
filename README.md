@@ -3,13 +3,6 @@
 # Purpose
 An application to calculate statistics for sets of data entered by the user.
 
-The menu options are as follows:
-
-1. Enter data
-2. Save data as CSV file
-3. Load data from CSV file
-4. Calculate statistics
-
 # Description of functions
 
 ## Enter data
@@ -24,7 +17,7 @@ then calculate stats.
 You can also import CSV files created by this application into Oracle.
 
 ### CSV file format
-HEADER="PROJECT",<Description>
+PROJECT,<Description>
 [<data-item-label>,<number>]
 
 e.g.
