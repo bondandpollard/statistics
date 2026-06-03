@@ -45,6 +45,7 @@ Version   Log/Ref   Date        Author        Description
                                               Print Results: Save calculated stats as text file.
                                               load Data: Move file operation into a separate function.
                                               Provide a command line option: if csv file specified auto load data.
+1.01                03/06/2026  IAB           Create function to display menu header and centre title text.
 */
 
 #include <iostream>
@@ -332,14 +333,39 @@ double mean(const ProjectData& pd) {
   return sum / static_cast<double>(n);
 }
 
-void display_menu(ProjectData& pd) {
+void display_project(const ProjectData& pd) {
+  std::cout << std::endl << "Project: " << pd.description << std::endl << std::endl;
+}
+
+// Centre text within length of border, with edge characters at left and right ends of string.
+// e.g. -          TITLE          -"
+std::string centre_header_text(const int border_length, const std::string& border_edge, const std::string& text) {
+  int left_pad = (border_length - (text.length()+2)) /2;
+  int right_pad = border_length - text.length() - left_pad -2;
+
+  std::string format_text = border_edge + std::string(left_pad,' ') + text + std::string(right_pad,' ') + border_edge;
+  return format_text;
+}
+
+// Display the screen header
+void display_header(const ProjectData& pd, const std::string& title, const std::string& subtitle) {
+  std::string border_line = "-----------------------------------------------";
+  std::string border_edge = "-";
+  std::size_t len_border_line = border_line.length();
+  std::string format_title = centre_header_text(len_border_line, border_edge, title);
+  std::string format_subtitle = centre_header_text(len_border_line, border_edge, subtitle);
+  
   clear_screen();
   std::cout << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "-     S T A T I S T I C S     -"  << std::endl;
-  std::cout << "-                             -"  << std::endl;
-  std::cout << "-          MAIN MENU          -"  << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
+  std::cout << border_line << std::endl;
+  std::cout << format_title << std::endl;
+  std::cout << format_subtitle << std::endl;
+  std::cout << border_line  << std::endl;
+  display_project(pd);
+}
+
+void display_menu(ProjectData& pd) {
+  display_header(pd, "S T A T I S T I C S","MAIN MENU");
   std::cout << " 1. Enter Data"                   << std::endl;
   std::cout << " 2. Display Data"                 << std::endl;
   std::cout << " 3. SAVE Data"                    << std::endl;
@@ -347,9 +373,6 @@ void display_menu(ProjectData& pd) {
   std::cout << " 5. Calculate Statistics"         << std::endl;
   std::cout << " 6. Print Results"                << std::endl;  
   std::cout << "99. Exit"                         << std::endl;
-  std::cout << "-------------------------------"  << std::endl << std::endl;
-  std::cout << "Project: " << pd.description      << std::endl;
-  std::cout << "-------------------------------"  << std::endl << std::endl;
 }
 
 void action_one(ProjectData& pd) {
@@ -358,15 +381,7 @@ void action_one(ProjectData& pd) {
   char response;
   bool ok_to_enter_data=true;                // Confirm with user before wiping data to enter new data
 
-  clear_screen();
-  std::cout << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "-     S T A T I S T I C S     -"  << std::endl;
-  std::cout << "-                             -"  << std::endl;
-  std::cout << "-        ENTER DATA           -"  << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "Project: " << pd.description      << std::endl;
-  std::cout << "-------------------------------"  << std::endl << std::endl;
+  display_header(pd,"S T A T I S T I C S","ENTER DATA");
   
   // Check if there is existing data. 
   ok_to_enter_data=warn_clear_data(pd);
@@ -383,15 +398,7 @@ void action_one(ProjectData& pd) {
 }
 
 void action_two(const ProjectData& pd) {
-  clear_screen();
-  std::cout << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "-     S T A T I S T I C S     -"  << std::endl;
-  std::cout << "-                             -"  << std::endl;
-  std::cout << "-       DISPLAY DATA          -"  << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "Project: " << pd.description      << std::endl;
-  std::cout << "-------------------------------"  << std::endl << std::endl;
+  display_header(pd, "S T A T I S T I C S","DISPLAY DATA");
   display_data(pd);
 }
 
@@ -399,15 +406,7 @@ void action_three(const ProjectData& pd) {
   const std::size_t n = pd.stats_data.size();
   std::string filename;
   
-  clear_screen();
-  std::cout << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "-     S T A T I S T I C S     -"  << std::endl;
-  std::cout << "-                             -"  << std::endl;
-  std::cout << "-          SAVE DATA          -"  << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "Project: " << pd.description      << std::endl;
-  std::cout << "-------------------------------"  << std::endl << std::endl;
+  display_header(pd,"S T A T I S T I C S","SAVE DATA");
   if (n==0) {
     std::cout << "There is nothing to save. Please enter or load some data." << std::endl;
   } else {
@@ -424,15 +423,7 @@ void action_four(ProjectData& pd) {
   std::string filename;                       // Name of file to open
   bool ok_to_continue;                        // If there is existing data, confirm user want to load new data and replace it
 
-  clear_screen();
-  std::cout << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "-     S T A T I S T I C S     -"  << std::endl;
-  std::cout << "-                             -"  << std::endl;
-  std::cout << "-          LOAD DATA          -"  << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "Project: " << pd.description      << std::endl;
-  std::cout << "-------------------------------"  << std::endl << std::endl;
+  display_header(pd,"S T A T I S T I C S","LOAD DATA");
      
   if (n>0) {
     std::cout << "\nYou have existing data. There are " << n << " values in memory." << std::endl;
@@ -470,15 +461,7 @@ void action_five(ProjectData& pd) {
   const std::size_t n = pd.stats_data.size();   // number of entries in stats_data
   double standard_deviation, mean_value;
   
-  clear_screen();
-  std::cout << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "-     S T A T I S T I C S     -"  << std::endl;
-  std::cout << "-                             -"  << std::endl;
-  std::cout << "-         CALCULATE           -"  << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "Project: " << pd.description      << std::endl;
-  std::cout << "-------------------------------"  << std::endl << std::endl;
+  display_header(pd,"S T A T I S T I C S","CALCULATE");
   
   // Check if there are any values for the calculation
   if (n) {
@@ -497,15 +480,7 @@ void action_six(const ProjectData& pd) {
   double standard_deviation, mean_value;
   std::string filename;
   
-  clear_screen();
-  std::cout << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "-     S T A T I S T I C S     -"  << std::endl;
-  std::cout << "-                             -"  << std::endl;
-  std::cout << "-        PRINT RESULTS        -"  << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "Project: " << pd.description      << std::endl;
-  std::cout << "-------------------------------"  << std::endl << std::endl;
+  display_header(pd,"S T A T I S T I C S","PRINT RESULTS");
   
   // Check if there are any values to print
   if (n) {
@@ -548,15 +523,7 @@ void action_six(const ProjectData& pd) {
 
 bool action_quit(const ProjectData& pd) {
   bool confirm_quit=false;    // check user sure they want to quit!
-  clear_screen();
-  std::cout << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "-     S T A T I S T I C S     -"  << std::endl;
-  std::cout << "-                             -"  << std::endl;
-  std::cout << "-           EXIT              -"  << std::endl;
-  std::cout << "-------------------------------"  << std::endl;
-  std::cout << "Project: " << pd.description      << std::endl;
-  std::cout << "-------------------------------"  << std::endl << std::endl;
+  display_header(pd,"S T A T I S T I C S","EXIT");
   
   // Double-check user really wants to quit program
   confirm_quit=prompt_confirm_quit(pd);
@@ -628,7 +595,7 @@ int main(int argc, char* argv[]) {
   
   do {
     display_menu(pd);
-    option=prompt_range(std::string("Please select an option."),min,max);
+    option=prompt_range(std::string("\nPlease select an option."),min,max);
     exit_menu=process_option(option, pd);
   } while (!exit_menu);
 
