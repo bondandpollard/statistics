@@ -46,6 +46,7 @@ Version   Log/Ref   Date        Author        Description
                                               load Data: Move file operation into a separate function.
                                               Provide a command line option: if csv file specified auto load data.
 1.01                03/06/2026  IAB           Create function to display menu header and centre title text.
+1.02                04/06/2026  IAB           Improve appearance of box.
 */
 
 #include <iostream>
@@ -68,7 +69,7 @@ struct ProjectData {
   std::vector<double> stats_data;
 };
 
-const std::string g_screen_title = "S T A T I S T I C S";
+const std::string g_screen_title = "S T A T I S T I C S";       // Change this to you company or system name
 
 // Open file
 std::ifstream file_open(std::string &filename) {
@@ -340,33 +341,53 @@ void display_project(const ProjectData& pd) {
   std::cout << std::endl << "Project: " << pd.description << std::endl << std::endl;
 }
 
-// Centre text within length of border, with edge characters at left and right ends of string.
-// e.g. -          TITLE          -"
-std::string centre_header_text(const int border_width, const char border_char, const std::string& text) {
-  int left_pad = (border_width - (text.length()+2)) /2;
-  int right_pad = border_width - text.length() - left_pad -2;
+// Centre text within width of box
+std::string centre_text(const char border_char, const char pad_char, const int width, const std::string& text) {
+  int left_pad = (width- (text.length()+2)) /2;
+  int right_pad = width - text.length() - left_pad -2;
 
-  std::string format_text = border_char + std::string(left_pad,' ') + text + std::string(right_pad,' ') + border_char;
+  std::string format_text = border_char + std::string(left_pad,pad_char) + text + std::string(right_pad,pad_char) + border_char;
   return format_text;
+}
+
+// Check that text fits within width of box
+std::string set_display_text(const std::string& text, const int width){
+  std::string display_text;
+  
+  if (text.size()>width-2) {
+    display_text="?";       // display error indication as text does not fit in box
+  } else {
+    display_text=text;      // text to display in box
+  }
+  return display_text;
 }
 
 // Display the screen header
 void display_header(const ProjectData& pd, const std::string& title, const std::string& subtitle) {
   const int width=80;
-  char border_char = '-';
-  std::string border_row = std::string(width,border_char);
-  std::string format_title = centre_header_text(width, border_char, title);
-  std::string format_subtitle = centre_header_text(width, border_char, subtitle);
-  
+  const int height=7;
+  const char horizontal_border = '-';
+  const char corner = '+';
+  const char vertical_border = '|';
+  const char space = ' ';
+  std::string display_title = set_display_text(title, width);
+  std::string display_subtitle = set_display_text(subtitle, width);
+ 
   clear_screen();
-  std::cout << std::endl;
-  std::cout << border_row << std::endl;
-  std::cout << centre_header_text(width, border_char, " ") << std::endl;
-  std::cout << format_title << std::endl;
-  std::cout << centre_header_text(width, border_char, " ") << std::endl;
-  std::cout << format_subtitle << std::endl;
-  std::cout << centre_header_text(width, border_char, " ") << std::endl;
-  std::cout << border_row  << std::endl;
+  std::cout << centre_text(corner, horizontal_border, width, "") << std::endl;                      // box top
+  for (int i=0; i<height-2; ++i) {
+    switch (i) {
+      case 1 : 
+        std::cout << centre_text(vertical_border, space , width, display_title) << std::endl;       // title
+        break;
+      case 3 :
+        std::cout << centre_text(vertical_border, space , width, display_subtitle) << std::endl;    // subtitle
+        break;
+      default :
+        std::cout << centre_text(vertical_border, space , width, "") << std::endl;                  // box sides
+    }
+  }
+  std::cout << centre_text(corner, horizontal_border, width, "") << std::endl;                      // box bottom
   display_project(pd);
 }
 
