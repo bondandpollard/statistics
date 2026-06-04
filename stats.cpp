@@ -68,6 +68,8 @@ struct ProjectData {
   std::vector<double> stats_data;
 };
 
+const std::string g_screen_title = "S T A T I S T I C S";
+
 // Open file
 std::ifstream file_open(std::string &filename) {
   std::ifstream file(filename);
@@ -143,17 +145,18 @@ void save_data(const std::string& filename, const ProjectData& pd) {
   std::ofstream outfile(filename);
   
   if (!outfile.is_open()) {
-    throw std::runtime_error("Could not open file: " + filename);
-  }
+    std::cerr << "Could not open file: " + filename;
+  } else {
   
-  // Write description
-  outfile << "PROJECT," << pd.description << std::endl;
+    // Write description
+    outfile << "PROJECT," << pd.description << std::endl;
   
-  // Write stats_data
-  for (size_t i = 0; i < pd.stats_data.size(); ++i) {
-    outfile << pd.stats_label[i] << "," << pd.stats_data[i] << std::endl;
-  }
+    // Write stats_data
+    for (size_t i = 0; i < pd.stats_data.size(); ++i) {
+      outfile << pd.stats_label[i] << "," << pd.stats_data[i] << std::endl;
+    }
   outfile.close();
+  }
 }
 
 // Clear terminal screen
@@ -339,33 +342,36 @@ void display_project(const ProjectData& pd) {
 
 // Centre text within length of border, with edge characters at left and right ends of string.
 // e.g. -          TITLE          -"
-std::string centre_header_text(const int border_length, const std::string& border_edge, const std::string& text) {
-  int left_pad = (border_length - (text.length()+2)) /2;
-  int right_pad = border_length - text.length() - left_pad -2;
+std::string centre_header_text(const int border_width, const char border_char, const std::string& text) {
+  int left_pad = (border_width - (text.length()+2)) /2;
+  int right_pad = border_width - text.length() - left_pad -2;
 
-  std::string format_text = border_edge + std::string(left_pad,' ') + text + std::string(right_pad,' ') + border_edge;
+  std::string format_text = border_char + std::string(left_pad,' ') + text + std::string(right_pad,' ') + border_char;
   return format_text;
 }
 
 // Display the screen header
 void display_header(const ProjectData& pd, const std::string& title, const std::string& subtitle) {
-  std::string border_line = "-----------------------------------------------";
-  std::string border_edge = "-";
-  std::size_t len_border_line = border_line.length();
-  std::string format_title = centre_header_text(len_border_line, border_edge, title);
-  std::string format_subtitle = centre_header_text(len_border_line, border_edge, subtitle);
+  const int width=80;
+  char border_char = '-';
+  std::string border_row = std::string(width,border_char);
+  std::string format_title = centre_header_text(width, border_char, title);
+  std::string format_subtitle = centre_header_text(width, border_char, subtitle);
   
   clear_screen();
   std::cout << std::endl;
-  std::cout << border_line << std::endl;
+  std::cout << border_row << std::endl;
+  std::cout << centre_header_text(width, border_char, " ") << std::endl;
   std::cout << format_title << std::endl;
+  std::cout << centre_header_text(width, border_char, " ") << std::endl;
   std::cout << format_subtitle << std::endl;
-  std::cout << border_line  << std::endl;
+  std::cout << centre_header_text(width, border_char, " ") << std::endl;
+  std::cout << border_row  << std::endl;
   display_project(pd);
 }
 
 void display_menu(ProjectData& pd) {
-  display_header(pd, "S T A T I S T I C S","MAIN MENU");
+  display_header(pd,g_screen_title,"MAIN MENU");
   std::cout << " 1. Enter Data"                   << std::endl;
   std::cout << " 2. Display Data"                 << std::endl;
   std::cout << " 3. SAVE Data"                    << std::endl;
@@ -381,7 +387,7 @@ void action_one(ProjectData& pd) {
   char response;
   bool ok_to_enter_data=true;                // Confirm with user before wiping data to enter new data
 
-  display_header(pd,"S T A T I S T I C S","ENTER DATA");
+  display_header(pd,g_screen_title,"ENTER DATA");
   
   // Check if there is existing data. 
   ok_to_enter_data=warn_clear_data(pd);
@@ -398,7 +404,7 @@ void action_one(ProjectData& pd) {
 }
 
 void action_two(const ProjectData& pd) {
-  display_header(pd, "S T A T I S T I C S","DISPLAY DATA");
+  display_header(pd, g_screen_title,"DISPLAY DATA");
   display_data(pd);
 }
 
@@ -406,7 +412,7 @@ void action_three(const ProjectData& pd) {
   const std::size_t n = pd.stats_data.size();
   std::string filename;
   
-  display_header(pd,"S T A T I S T I C S","SAVE DATA");
+  display_header(pd,g_screen_title,"SAVE DATA");
   if (n==0) {
     std::cout << "There is nothing to save. Please enter or load some data." << std::endl;
   } else {
@@ -423,7 +429,7 @@ void action_four(ProjectData& pd) {
   std::string filename;                       // Name of file to open
   bool ok_to_continue;                        // If there is existing data, confirm user want to load new data and replace it
 
-  display_header(pd,"S T A T I S T I C S","LOAD DATA");
+  display_header(pd,g_screen_title,"LOAD DATA");
      
   if (n>0) {
     std::cout << "\nYou have existing data. There are " << n << " values in memory." << std::endl;
@@ -461,7 +467,7 @@ void action_five(ProjectData& pd) {
   const std::size_t n = pd.stats_data.size();   // number of entries in stats_data
   double standard_deviation, mean_value;
   
-  display_header(pd,"S T A T I S T I C S","CALCULATE");
+  display_header(pd,g_screen_title,"CALCULATE");
   
   // Check if there are any values for the calculation
   if (n) {
@@ -480,7 +486,7 @@ void action_six(const ProjectData& pd) {
   double standard_deviation, mean_value;
   std::string filename;
   
-  display_header(pd,"S T A T I S T I C S","PRINT RESULTS");
+  display_header(pd,g_screen_title,"PRINT RESULTS");
   
   // Check if there are any values to print
   if (n) {
@@ -488,34 +494,32 @@ void action_six(const ProjectData& pd) {
     
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
     filename=prompt_filename();
-    
     std::ofstream outfile(filename);
-  
     if (!outfile.is_open()) {
-      throw std::runtime_error("Could not open file: " + filename);
-    }
+      std::cerr << "Could not open file: " + filename;
+    } else {
   
-    // Write description
-    outfile << "Statistics Project: " << pd.description << std::endl;
-    outfile << "\nData:" << std::endl;
+      // Write description
+      outfile << "Statistics Project: " << pd.description << std::endl;
+      outfile << "\nData:" << std::endl;
     
-    // Write data
-    for (size_t i = 0; i < pd.stats_data.size(); ++i) {
-      outfile << "[" << i+1 << "]\t" << pd.stats_label[i] << "\t : " << "\t" << pd.stats_data[i] << std::endl;
+      // Write data
+      for (size_t i = 0; i < pd.stats_data.size(); ++i) {
+        outfile << "[" << i+1 << "]\t" << pd.stats_label[i] << "\t : " << "\t" << pd.stats_data[i] << std::endl;
+      }
+      outfile << std::endl;
+    
+      // Write statistics results
+      outfile << "\nResults:" << std::endl;
+      outfile << "Count of values = " << n << std::endl;
+      standard_deviation=stddev(pd);
+      outfile << "Standard Deviation (Sample) = " << standard_deviation << std::endl;
+      mean_value=mean(pd);
+      outfile << "Mean = " << mean_value << std::endl <<std::endl;
+      outfile.close(); 
+    
+      std::cout << "\nYour results were printed to file: " << filename << std::endl;
     }
-    outfile << std::endl;
-    
-    // Write statistics results
-    outfile << "\nResults:" << std::endl;
-    outfile << "Count of values = " << n << std::endl;
-    standard_deviation=stddev(pd);
-    outfile << "Standard Deviation (Sample) = " << standard_deviation << std::endl;
-    mean_value=mean(pd);
-    outfile << "Mean = " << mean_value << std::endl <<std::endl;
-    outfile.close(); 
-    
-    std::cout << "\nYour results were printed to file: " << filename << std::endl;
-    
   } else {
     std::cout << "Please enter or load some data for the calculations!" << std::endl;
   }
@@ -523,7 +527,7 @@ void action_six(const ProjectData& pd) {
 
 bool action_quit(const ProjectData& pd) {
   bool confirm_quit=false;    // check user sure they want to quit!
-  display_header(pd,"S T A T I S T I C S","EXIT");
+  display_header(pd,g_screen_title,"EXIT");
   
   // Double-check user really wants to quit program
   confirm_quit=prompt_confirm_quit(pd);
