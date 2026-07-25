@@ -1,7 +1,7 @@
 # statistics repository
 
 # Purpose
-An application to calculate statistics for sets of data entered by the user.
+A C++ application to calculate statistics for sets of data entered by the user.
 
 # Description of functions
 
@@ -11,10 +11,9 @@ Enter raw data for the statistics calculations.
 ## Save data as CSV
 Save data to a CSV file.
 The format is the same as used in the oracle-appsdemo statistics application.
-You can exchange between this application and Oracle.
-You will be able to export data from Oracle as a csv file and load it in this application,
-then calculate stats.
-You can also import CSV files created by this application into Oracle.
+You can exchange data between this application and the Oracle stats application.
+Export data from Oracle as a csv file, load it into this application, and calculate stats.
+Export data from this application as a CSV file, then load it into Oracle.
 
 ### CSV file format
 PROJECT,<Description>
